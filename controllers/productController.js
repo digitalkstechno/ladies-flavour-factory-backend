@@ -56,18 +56,22 @@ const createProduct = asyncHandler(async (req, res) => {
     sku,
     category,
     description,
-    images,
     unitPrice,
     costPrice,
     stockQuantity,
   } = req.body;
+
+  let imagePath = '';
+  if (req.file) {
+    imagePath = req.file.path.replace(/\\/g, "/");
+  }
 
   const product = new Product({
     name,
     sku,
     category,
     description,
-    images,
+    images: imagePath ? [imagePath] : [],
     unitPrice,
     costPrice,
     stockQuantity,
@@ -87,7 +91,6 @@ const updateProduct = asyncHandler(async (req, res) => {
     sku,
     category,
     description,
-    images,
     unitPrice,
     costPrice,
     stockQuantity,
@@ -100,10 +103,14 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.sku = sku || product.sku;
     product.category = category || product.category;
     product.description = description || product.description;
-    product.images = images || product.images;
     product.unitPrice = unitPrice || product.unitPrice;
     product.costPrice = costPrice || product.costPrice;
     product.stockQuantity = stockQuantity || product.stockQuantity;
+
+    if (req.file) {
+      const imagePath = req.file.path.replace(/\\/g, "/");
+      product.images = [imagePath];
+    }
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);

@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -26,6 +27,9 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/stock', stockRoutes);
+
+const uploadsDir = path.join(__dirname, '/uploads');
+app.use('/uploads', express.static(uploadsDir));
 
 const PORT = process.env.PORT || 5000;
 
