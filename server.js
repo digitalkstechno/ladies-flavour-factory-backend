@@ -8,6 +8,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const productRoutes = require('./routes/productRoutes');
 const stockRoutes = require('./routes/stockRoutes');
 const roleRoutes = require('./routes/roleRoutes');
+const { errorHandler } = require('./middleware/errorMiddleware');
 
 dotenv.config();
 
@@ -30,6 +31,8 @@ app.use('/api/stock', stockRoutes);
 
 const uploadsDir = path.join(__dirname, '/uploads');
 app.use('/uploads', express.static(uploadsDir));
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

@@ -130,6 +130,36 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    
+    if (req.body.password) {
+      user.password = req.body.password;
+    }
+
+    const updatedUser = await user.save();
+    const populatedUser = await User.findById(updatedUser._id).populate('role');
+
+    res.json({
+      _id: populatedUser._id,
+      name: populatedUser.name,
+      email: populatedUser.email,
+      role: populatedUser.role,
+      token: generateToken(populatedUser._id),
+    });
+  } else {
+    res.status(404);
+    throw new Error('User not found');
+  }
+});
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d',
@@ -142,4 +172,5 @@ module.exports = {
   getUsers,
   deleteUser,
   updateUser,
+  updateUserProfile,
 };

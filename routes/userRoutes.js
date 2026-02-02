@@ -6,10 +6,12 @@ const {
   getUsers,
   deleteUser,
   updateUser,
+  updateUserProfile,
 } = require('../controllers/userController');
 const { protect, checkPermission } = require('../middleware/authMiddleware');
 
 router.post('/login', authUser);
+router.route('/profile').put(protect, updateUserProfile);
 router
   .route('/')
   .post( registerUser)
