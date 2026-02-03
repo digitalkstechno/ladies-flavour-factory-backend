@@ -10,7 +10,9 @@ const stockRoutes = require('./routes/stockRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const reportRoutes = require('./routes/reportRoutes');
-const barcodeRoutes = require('./routes/barcodeRoutes')
+const barcodeRoutes = require('./routes/barcodeRoutes');
+const seederRoutes = require('./routes/seederRoutes');
+
 const { errorHandler } = require('./middleware/errorMiddleware');
 
 dotenv.config();
@@ -34,6 +36,7 @@ app.use('/api/stock', stockRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/barcodes', barcodeRoutes);
+app.use('/api/seeder', seederRoutes);
 
 const uploadsDir = path.join(__dirname, '/uploads');
 app.use('/uploads', express.static(uploadsDir));

@@ -13,10 +13,10 @@ const { protect, checkPermission } = require('../middleware/authMiddleware');
 router.post('/login', authUser);
 router.put('/profile', protect, updateUserProfile);
 
-router.post('/', registerUser);
-router.get('/', protect, checkPermission('manage_users'), getUsers);
+router.post('/', protect, checkPermission('create_user'), registerUser);
+router.get('/', protect, checkPermission('view_users'), getUsers);
 
-router.delete('/:id', protect, checkPermission('manage_users'), deleteUser);
-router.put('/:id', protect, checkPermission('manage_users'), updateUser);
+router.delete('/:id', protect, checkPermission('delete_user'), deleteUser);
+router.put('/:id', protect, checkPermission('edit_user'), updateUser);
 
 module.exports = router;
