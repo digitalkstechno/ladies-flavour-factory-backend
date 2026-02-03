@@ -5,15 +5,16 @@ const Product = require('../models/productModel');
 // @route   GET /api/products
 // @access  Private
 const getProducts = asyncHandler(async (req, res) => {
-  const pageSize = 10;
-  const page = Number(req.query.pageNumber) || 1;
-
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const search = req.query.search || '';
+  
   const query = {};
 
-  if (req.query.keyword) {
+  if (search) {
     query.$or = [
-      { name: { $regex: req.query.keyword, $options: 'i' } },
-      { sku: { $regex: req.query.keyword, $options: 'i' } },
+      { name: { $regex: search, $options: 'i' } },
+      { sku: { $regex: search, $options: 'i' } },
     ];
   }
 
@@ -24,10 +25,16 @@ const getProducts = asyncHandler(async (req, res) => {
   const count = await Product.countDocuments({ ...query });
   const products = await Product.find({ ...query })
     .populate('catalog', 'name')
-    .limit(pageSize)
-    .skip(pageSize * (page - 1));
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip(limit * (page - 1));
 
-  res.json({ products, page, pages: Math.ceil(count / pageSize) });
+  res.json({ 
+    products, 
+    page, 
+    pages: Math.ceil(count / limit),
+    total: count 
+  });
 });
 
 // @desc    Get single product

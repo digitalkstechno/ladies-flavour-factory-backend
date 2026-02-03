@@ -5,8 +5,31 @@ const Catalog = require('../models/catalogModel');
 // @route   GET /api/catalogs
 // @access  Private
 const getCatalogs = asyncHandler(async (req, res) => {
-  const catalogs = await Catalog.find({});
-  res.json(catalogs);
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const search = req.query.search || '';
+  
+  const query = {};
+
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { code: { $regex: search, $options: 'i' } },
+    ];
+  }
+
+  const count = await Catalog.countDocuments({ ...query });
+  const catalogs = await Catalog.find({ ...query })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip(limit * (page - 1));
+
+  res.json({
+    catalogs,
+    page,
+    pages: Math.ceil(count / limit),
+    total: count
+  });
 });
 
 // @desc    Create a catalog

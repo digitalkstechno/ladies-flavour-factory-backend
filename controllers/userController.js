@@ -78,8 +78,32 @@ const registerUser = asyncHandler(async (req, res) => {
 // @route   GET /api/users
 // @access  Private/Admin
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({}).populate('role');
-  res.json(users);
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const search = req.query.search || '';
+
+  const query = {};
+
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+    ];
+  }
+
+  const count = await User.countDocuments({ ...query });
+  const users = await User.find({ ...query })
+    .populate('role')
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip(limit * (page - 1));
+
+  res.json({
+    users,
+    page,
+    pages: Math.ceil(count / limit),
+    total: count
+  });
 });
 
 // @desc    Delete user

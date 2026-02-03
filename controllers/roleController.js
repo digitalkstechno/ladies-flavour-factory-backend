@@ -5,8 +5,28 @@ const Role = require('../models/roleModel');
 // @route   GET /api/roles
 // @access  Private/Admin
 const getRoles = asyncHandler(async (req, res) => {
-  const roles = await Role.find({});
-  res.json(roles);
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const search = req.query.search || '';
+
+  const query = {};
+
+  if (search) {
+    query.name = { $regex: search, $options: 'i' };
+  }
+
+  const count = await Role.countDocuments({ ...query });
+  const roles = await Role.find({ ...query })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip(limit * (page - 1));
+
+  res.json({
+    roles,
+    page,
+    pages: Math.ceil(count / limit),
+    total: count
+  });
 });
 
 // @desc    Create a new role

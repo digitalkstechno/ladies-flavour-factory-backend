@@ -6,7 +6,40 @@ const Product = require('../models/productModel');
 // @route   GET /api/stock
 // @access  Private
 const getStockTransactions = asyncHandler(async (req, res) => {
-  const transactions = await StockTransaction.find({})
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const search = req.query.search || '';
+  const type = req.query.type || '';
+  const date = req.query.date || '';
+
+  const query = {};
+
+  if (type && type !== 'ALL') {
+    query.type = type;
+  }
+
+  if (search) {
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: search, $options: 'i' } },
+        { sku: { $regex: search, $options: 'i' } },
+      ],
+    }).select('_id');
+    
+    const productIds = products.map(p => p._id);
+    query.product = { $in: productIds };
+  }
+
+  if (date === 'today') {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    query.createdAt = { $gte: start, $lte: end };
+  }
+
+  const count = await StockTransaction.countDocuments({ ...query });
+  const transactions = await StockTransaction.find({ ...query })
     .populate({
       path: 'product',
       select: 'name sku catalog',
@@ -16,8 +49,16 @@ const getStockTransactions = asyncHandler(async (req, res) => {
       }
     })
     .populate('user', 'name')
-    .sort({ createdAt: -1 });
-  res.json(transactions);
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip(limit * (page - 1));
+
+  res.json({
+    transactions,
+    page,
+    pages: Math.ceil(count / limit),
+    total: count
+  });
 });
 
 // @desc    Add stock transaction (IN/OUT)

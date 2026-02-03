@@ -5,20 +5,33 @@ const Product = require('../models/productModel');
 // @route   GET /api/barcodes/products
 // @access  Private
 const getBarcodeProducts = asyncHandler(async (req, res) => {
-  const { keyword } = req.query;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const search = req.query.search || '';
+
   const query = {};
 
-  if (keyword) {
+  if (search) {
     query.$or = [
-      { name: { $regex: keyword, $options: 'i' } },
-      { sku: { $regex: keyword, $options: 'i' } },
+      { name: { $regex: search, $options: 'i' } },
+      { sku: { $regex: search, $options: 'i' } },
     ];
   }
 
   // Select only necessary fields for barcodes
-  const products = await Product.find(query).select('name sku unitPrice _id');
+  const count = await Product.countDocuments({ ...query });
+  const products = await Product.find(query)
+    .select('name sku unitPrice _id')
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip(limit * (page - 1));
 
-  res.json(products);
+  res.json({
+    products,
+    page,
+    pages: Math.ceil(count / limit),
+    total: count
+  });
 });
 
 module.exports = {

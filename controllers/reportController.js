@@ -1,27 +1,47 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/productModel');
+const Catalog = require('../models/catalogModel');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit-table');
 
-// @desc    Get inventory report with stats
+// @desc    Get inventory report with pagination and search
 // @route   GET /api/reports/inventory
 // @access  Private
 const getInventoryReport = asyncHandler(async (req, res) => {
-  const products = await Product.find({}).populate('catalog', 'name');
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const search = req.query.search || '';
 
-  const totalStockValue = products.reduce((acc, p) => acc + (p.stockQuantity * p.costPrice), 0);
-  const lowStockCount = products.filter(p => p.stockQuantity < 10).length;
-  const totalItems = products.reduce((acc, p) => acc + p.stockQuantity, 0);
+  let query = {};
 
-  // You might want to format the product list specifically for the report if needed
-  // For now, returning the raw product list plus stats
+  if (search) {
+    const searchRegex = { $regex: search, $options: 'i' };
+    
+    // Find matching catalogs first
+    const matchingCatalogs = await Catalog.find({ name: searchRegex }).select('_id');
+    const catalogIds = matchingCatalogs.map(c => c._id);
+
+    query = {
+      $or: [
+        { name: searchRegex },
+        { sku: searchRegex },
+        { catalog: { $in: catalogIds } }
+      ]
+    };
+  }
+
+  const count = await Product.countDocuments(query);
+  const products = await Product.find(query)
+    .populate('catalog', 'name')
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip(limit * (page - 1));
+
   res.json({
-    stats: {
-      totalStockValue,
-      lowStockCount,
-      totalItems,
-    },
-    products
+    products,
+    page,
+    pages: Math.ceil(count / limit),
+    total: count
   });
 });
 
@@ -29,7 +49,23 @@ const getInventoryReport = asyncHandler(async (req, res) => {
 // @route   GET /api/reports/inventory/excel
 // @access  Private
 const exportInventoryExcel = asyncHandler(async (req, res) => {
-  const products = await Product.find({}).populate('catalog', 'name');
+  const search = req.query.search || '';
+  let query = {};
+
+  if (search) {
+    const searchRegex = { $regex: search, $options: 'i' };
+    const matchingCatalogs = await Catalog.find({ name: searchRegex }).select('_id');
+    const catalogIds = matchingCatalogs.map(c => c._id);
+    query = {
+      $or: [
+        { name: searchRegex },
+        { sku: searchRegex },
+        { catalog: { $in: catalogIds } }
+      ]
+    };
+  }
+
+  const products = await Product.find(query).populate('catalog', 'name').sort({ createdAt: -1 });
 
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Inventory');
@@ -38,6 +74,7 @@ const exportInventoryExcel = asyncHandler(async (req, res) => {
     { header: 'Catalog', key: 'catalog', width: 20 },
     { header: 'Product Name', key: 'name', width: 30 },
     { header: 'SKU', key: 'sku', width: 20 },
+    { header: 'Stock', key: 'stock', width: 10 },
   ];
 
   products.forEach(product => {
@@ -45,6 +82,7 @@ const exportInventoryExcel = asyncHandler(async (req, res) => {
       catalog: product.catalog?.name || '-',
       name: product.name,
       sku: product.sku,
+      stock: product.stockQuantity,
     });
   });
 
@@ -65,7 +103,23 @@ const exportInventoryExcel = asyncHandler(async (req, res) => {
 // @route   GET /api/reports/inventory/pdf
 // @access  Private
 const exportInventoryPDF = asyncHandler(async (req, res) => {
-  const products = await Product.find({}).populate('catalog', 'name');
+  const search = req.query.search || '';
+  let query = {};
+
+  if (search) {
+    const searchRegex = { $regex: search, $options: 'i' };
+    const matchingCatalogs = await Catalog.find({ name: searchRegex }).select('_id');
+    const catalogIds = matchingCatalogs.map(c => c._id);
+    query = {
+      $or: [
+        { name: searchRegex },
+        { sku: searchRegex },
+        { catalog: { $in: catalogIds } }
+      ]
+    };
+  }
+
+  const products = await Product.find(query).populate('catalog', 'name').sort({ createdAt: -1 });
 
   const doc = new PDFDocument({ margin: 30, size: 'A4' });
 
