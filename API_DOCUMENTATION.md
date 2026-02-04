@@ -268,6 +268,22 @@ Base URL: `http://localhost:5000/api`
   ```
   - `type` can be: "IN", "OUT", "ADJUSTMENT"
 
+### Scan Stock QR
+- **URL:** `/stock/scan`
+- **Method:** `POST`
+- **Access:** Private (Permission: `manage_stock`)
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+  ```json
+  {
+    "sku": "SKU-001",
+    "type": "IN"
+  }
+  ```
+  - `type` can be: "IN", "OUT"
+  - `quantity` is **always 1** (input is ignored)
+  - `userId` is extracted from the authentication token
+
 ---
 
 ## Notifications

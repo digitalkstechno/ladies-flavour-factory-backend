@@ -11,6 +11,8 @@ const getStockTransactions = asyncHandler(async (req, res) => {
   const search = req.query.search || '';
   const type = req.query.type || '';
   const date = req.query.date || '';
+  const startDate = req.query.startDate;
+  const endDate = req.query.endDate;
 
   const query = {};
 
@@ -30,7 +32,13 @@ const getStockTransactions = asyncHandler(async (req, res) => {
     query.product = { $in: productIds };
   }
 
-  if (date === 'today') {
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    query.createdAt = { $gte: start, $lte: end };
+  } else if (date === 'today') {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     const end = new Date();
@@ -101,7 +109,68 @@ const addStockTransaction = asyncHandler(async (req, res) => {
   res.status(201).json(transaction);
 });
 
+// @desc    Handle QR Code Scan for Stock
+// @route   POST /api/stock/scan
+// @access  Private
+const handleQRScan = asyncHandler(async (req, res) => {
+  const { sku, type } = req.body;
+  
+  // Logic: Both IN and OUT are strictly 1
+  const quantity = 1;
+
+  // Find product by SKU
+  const product = await Product.findOne({ sku });
+
+  if (!product) {
+    res.status(404);
+    throw new Error('Product not found');
+  }
+
+  if (!['IN', 'OUT'].includes(type)) {
+    res.status(400);
+    throw new Error('Invalid transaction type. Must be IN or OUT');
+  }
+
+  // Check stock availability for OUT transactions
+  if (type === 'OUT') {
+    if (product.stockQuantity < 1) {
+      res.status(400);
+      throw new Error('Out of stock. Cannot process OUT transaction.');
+    }
+  }
+
+  // Create stock transaction
+  const transaction = await StockTransaction.create({
+    product: product._id,
+    user: req.user._id,
+    type,
+    quantity: quantity,
+    reason: 'QR Scan',
+  });
+
+  // Update Product Stock
+  if (type === 'IN') {
+    product.stockQuantity += quantity;
+  } else if (type === 'OUT') {
+    product.stockQuantity -= quantity;
+  }
+
+  await product.save();
+
+  res.status(201).json({
+    message: 'Stock updated successfully',
+    product: {
+      _id: product._id,
+      name: product.name,
+      sku: product.sku,
+      currentStock: product.stockQuantity
+    },
+    transaction
+  });
+});
+
 module.exports = {
   getStockTransactions,
   addStockTransaction,
+  handleQRScan,
 };
