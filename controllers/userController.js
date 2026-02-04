@@ -91,12 +91,15 @@ const getUsers = asyncHandler(async (req, res) => {
     ];
   }
 
-  const count = await User.countDocuments({ ...query });
-  const users = await User.find({ ...query })
-    .populate('role')
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(limit * (page - 1));
+  const [count, users] = await Promise.all([
+    User.countDocuments({ ...query }),
+    User.find({ ...query })
+      .populate('role')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * (page - 1))
+      .lean(),
+  ]);
 
   res.json({
     users,

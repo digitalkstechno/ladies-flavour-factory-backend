@@ -5,7 +5,7 @@ const Notification = require('../models/notificationModel');
 // @route   GET /api/notifications
 // @access  Private
 const getNotifications = asyncHandler(async (req, res) => {
-  const notifications = await Notification.find({}).sort({ createdAt: -1 });
+  const notifications = await Notification.find({}).sort({ createdAt: -1 }).lean();
   res.json(notifications);
 });
 

@@ -5,16 +5,19 @@ const productSchema = mongoose.Schema(
     name: {
       type: String,
       required: true,
+      index: true,
     },
     sku: {
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     catalog: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Catalog',
       required: true,
+      index: true,
     },
     description: {
       type: String,

@@ -38,20 +38,23 @@ const getStockTransactions = asyncHandler(async (req, res) => {
     query.createdAt = { $gte: start, $lte: end };
   }
 
-  const count = await StockTransaction.countDocuments({ ...query });
-  const transactions = await StockTransaction.find({ ...query })
-    .populate({
-      path: 'product',
-      select: 'name sku catalog',
-      populate: {
-        path: 'catalog',
-        select: 'name'
-      }
-    })
-    .populate('user', 'name')
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(limit * (page - 1));
+  const [count, transactions] = await Promise.all([
+    StockTransaction.countDocuments({ ...query }),
+    StockTransaction.find({ ...query })
+      .populate({
+        path: 'product',
+        select: 'name sku catalog',
+        populate: {
+          path: 'catalog',
+          select: 'name'
+        }
+      })
+      .populate('user', 'name')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * (page - 1))
+      .lean(),
+  ]);
 
   res.json({
     transactions,

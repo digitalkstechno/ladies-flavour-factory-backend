@@ -6,11 +6,13 @@ const userSchema = mongoose.Schema(
     name: {
       type: String,
       required: true,
+      index: true,
     },
     email: {
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     password: {
       type: String,
@@ -20,6 +22,7 @@ const userSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Role',
       required: true,
+      index: true,
     },
   },
   {

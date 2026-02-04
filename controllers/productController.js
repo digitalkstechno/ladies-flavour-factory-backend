@@ -22,12 +22,15 @@ const getProducts = asyncHandler(async (req, res) => {
     query.catalog = req.query.catalog;
   }
 
-  const count = await Product.countDocuments({ ...query });
-  const products = await Product.find({ ...query })
-    .populate('catalog', 'name')
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(limit * (page - 1));
+  const [count, products] = await Promise.all([
+    Product.countDocuments({ ...query }),
+    Product.find({ ...query })
+      .populate('catalog', 'name')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * (page - 1))
+      .lean(),
+  ]);
 
   res.json({ 
     products, 
@@ -41,10 +44,9 @@ const getProducts = asyncHandler(async (req, res) => {
 // @route   GET /api/products/:id
 // @access  Private
 const getProductById = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id).populate(
-    'catalog',
-    'name'
-  );
+  const product = await Product.findById(req.params.id)
+    .populate('catalog', 'name')
+    .lean();
 
   if (product) {
     res.json(product);

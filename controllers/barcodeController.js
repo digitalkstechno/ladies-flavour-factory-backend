@@ -19,12 +19,15 @@ const getBarcodeProducts = asyncHandler(async (req, res) => {
   }
 
   // Select only necessary fields for barcodes
-  const count = await Product.countDocuments({ ...query });
-  const products = await Product.find(query)
-    .select('name sku unitPrice _id')
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(limit * (page - 1));
+  const [count, products] = await Promise.all([
+    Product.countDocuments({ ...query }),
+    Product.find(query)
+      .select('name sku unitPrice _id')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * (page - 1))
+      .lean(),
+  ]);
 
   res.json({
     products,

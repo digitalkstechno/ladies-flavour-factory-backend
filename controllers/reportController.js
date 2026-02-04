@@ -18,7 +18,7 @@ const getInventoryReport = asyncHandler(async (req, res) => {
     const searchRegex = { $regex: search, $options: 'i' };
     
     // Find matching catalogs first
-    const matchingCatalogs = await Catalog.find({ name: searchRegex }).select('_id');
+    const matchingCatalogs = await Catalog.find({ name: searchRegex }).select('_id').lean();
     const catalogIds = matchingCatalogs.map(c => c._id);
 
     query = {
@@ -30,12 +30,15 @@ const getInventoryReport = asyncHandler(async (req, res) => {
     };
   }
 
-  const count = await Product.countDocuments(query);
-  const products = await Product.find(query)
-    .populate('catalog', 'name')
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(limit * (page - 1));
+  const [count, products] = await Promise.all([
+    Product.countDocuments(query),
+    Product.find(query)
+      .populate('catalog', 'name')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * (page - 1))
+      .lean(),
+  ]);
 
   res.json({
     products,
@@ -54,7 +57,7 @@ const exportInventoryExcel = asyncHandler(async (req, res) => {
 
   if (search) {
     const searchRegex = { $regex: search, $options: 'i' };
-    const matchingCatalogs = await Catalog.find({ name: searchRegex }).select('_id');
+    const matchingCatalogs = await Catalog.find({ name: searchRegex }).select('_id').lean();
     const catalogIds = matchingCatalogs.map(c => c._id);
     query = {
       $or: [
@@ -65,7 +68,7 @@ const exportInventoryExcel = asyncHandler(async (req, res) => {
     };
   }
 
-  const products = await Product.find(query).populate('catalog', 'name').sort({ createdAt: -1 });
+  const products = await Product.find(query).populate('catalog', 'name').sort({ createdAt: -1 }).lean();
 
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Inventory');
@@ -108,7 +111,7 @@ const exportInventoryPDF = asyncHandler(async (req, res) => {
 
   if (search) {
     const searchRegex = { $regex: search, $options: 'i' };
-    const matchingCatalogs = await Catalog.find({ name: searchRegex }).select('_id');
+    const matchingCatalogs = await Catalog.find({ name: searchRegex }).select('_id').lean();
     const catalogIds = matchingCatalogs.map(c => c._id);
     query = {
       $or: [
@@ -119,7 +122,7 @@ const exportInventoryPDF = asyncHandler(async (req, res) => {
     };
   }
 
-  const products = await Product.find(query).populate('catalog', 'name').sort({ createdAt: -1 });
+  const products = await Product.find(query).populate('catalog', 'name').sort({ createdAt: -1 }).lean();
 
   const doc = new PDFDocument({ margin: 30, size: 'A4' });
 

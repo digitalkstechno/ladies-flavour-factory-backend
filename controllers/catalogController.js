@@ -18,11 +18,14 @@ const getCatalogs = asyncHandler(async (req, res) => {
     ];
   }
 
-  const count = await Catalog.countDocuments({ ...query });
-  const catalogs = await Catalog.find({ ...query })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(limit * (page - 1));
+  const [count, catalogs] = await Promise.all([
+    Catalog.countDocuments({ ...query }),
+    Catalog.find({ ...query })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * (page - 1))
+      .lean(),
+  ]);
 
   res.json({
     catalogs,

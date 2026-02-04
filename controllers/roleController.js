@@ -15,11 +15,14 @@ const getRoles = asyncHandler(async (req, res) => {
     query.name = { $regex: search, $options: 'i' };
   }
 
-  const count = await Role.countDocuments({ ...query });
-  const roles = await Role.find({ ...query })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(limit * (page - 1));
+  const [count, roles] = await Promise.all([
+    Role.countDocuments({ ...query }),
+    Role.find({ ...query })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * (page - 1))
+      .lean(),
+  ]);
 
   res.json({
     roles,

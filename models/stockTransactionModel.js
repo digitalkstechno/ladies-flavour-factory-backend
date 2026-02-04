@@ -6,6 +6,7 @@ const stockTransactionSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
       required: true,
+      index: true,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,6 +17,7 @@ const stockTransactionSchema = mongoose.Schema(
       type: String,
       enum: ['IN', 'OUT', 'ADJUSTMENT'],
       required: true,
+      index: true,
     },
     quantity: {
       type: Number,
