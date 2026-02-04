@@ -49,6 +49,8 @@ const getProductById = asyncHandler(async (req, res) => {
     .lean();
 
   if (product) {
+    // Add image property for compatibility with frontend if it expects singular image
+    product.image = product.images && product.images.length > 0 ? product.images[0] : '';
     res.json(product);
   } else {
     res.status(404);
