@@ -5,8 +5,8 @@ const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit-table');
 
 // @desc    Get inventory report with pagination and search
-// @route   GET /api/reports/inventory
-// @access  Private
+
+
 const getInventoryReport = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
@@ -49,8 +49,8 @@ const getInventoryReport = asyncHandler(async (req, res) => {
 });
 
 // @desc    Export inventory to Excel
-// @route   GET /api/reports/inventory/excel
-// @access  Private
+
+
 const exportInventoryExcel = asyncHandler(async (req, res) => {
   const search = req.query.search || '';
   let query = {};
@@ -103,8 +103,8 @@ const exportInventoryExcel = asyncHandler(async (req, res) => {
 });
 
 // @desc    Export inventory to PDF
-// @route   GET /api/reports/inventory/pdf
-// @access  Private
+
+
 const exportInventoryPDF = asyncHandler(async (req, res) => {
   const search = req.query.search || '';
   let query = {};

@@ -2,8 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Role = require('../models/roleModel');
 
 // @desc    Get all roles
-// @route   GET /api/roles
-// @access  Private/Admin
+
 const getRoles = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
@@ -33,8 +32,7 @@ const getRoles = asyncHandler(async (req, res) => {
 });
 
 // @desc    Create a new role
-// @route   POST /api/roles
-// @access  Private/Admin
+
 const createRole = asyncHandler(async (req, res) => {
   const { name, permissions, description } = req.body;
 
@@ -60,8 +58,8 @@ const createRole = asyncHandler(async (req, res) => {
 });
 
 // @desc    Update role
-// @route   PUT /api/roles/:id
-// @access  Private/Admin
+
+
 const updateRole = asyncHandler(async (req, res) => {
   const role = await Role.findById(req.params.id);
 
@@ -79,8 +77,8 @@ const updateRole = asyncHandler(async (req, res) => {
 });
 
 // @desc    Delete role
-// @route   DELETE /api/roles/:id
-// @access  Private/Admin
+
+
 const deleteRole = asyncHandler(async (req, res) => {
   const role = await Role.findById(req.params.id);
 

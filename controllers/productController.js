@@ -2,8 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Product = require('../models/productModel');
 
 // @desc    Get all products
-// @route   GET /api/products
-// @access  Private
+
 const getProducts = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
@@ -41,8 +40,8 @@ const getProducts = asyncHandler(async (req, res) => {
 });
 
 // @desc    Get single product
-// @route   GET /api/products/:id
-// @access  Private
+
+
 const getProductById = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id)
     .populate('catalog', 'name')
@@ -59,8 +58,8 @@ const getProductById = asyncHandler(async (req, res) => {
 });
 
 // @desc    Create a product
-// @route   POST /api/products
-// @access  Private/Admin
+
+
 const createProduct = asyncHandler(async (req, res) => {
   const {
     name,
@@ -94,8 +93,8 @@ const createProduct = asyncHandler(async (req, res) => {
 });
 
 // @desc    Update a product
-// @route   PUT /api/products/:id
-// @access  Private/Admin
+
+
 const updateProduct = asyncHandler(async (req, res) => {
   const {
     name,
@@ -132,8 +131,8 @@ const updateProduct = asyncHandler(async (req, res) => {
 });
 
 // @desc    Delete a product
-// @route   DELETE /api/products/:id
-// @access  Private/Admin
+
+
 const deleteProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
 
